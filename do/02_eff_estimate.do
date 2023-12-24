@@ -1,33 +1,7 @@
 
-** Cost minimization
-use "IBNET3_4python.dta",clear
-tsset Ucode Year
+/*
 
-*removing other cost (c6) from the model.
-sfpanel ldc7 ldc3 ldc4 ldc5 ldc9 time, model(tre) distribution(exp) cost nsim(20) simtype(genhalton) base(7) rescale vce(robust)
-outreg2 using "frontier_test.xls", sideway noparen dec(3) nose replace
-
-estimates store tre_c 
-predict u_tre_c, u
-tab Country if u_tre_c==.
-
-gen cost_eff3=exp(-u_tre_c)  if   u_tre_c!=.
-replace cost_eff3=1 if cost_eff3!=. & cost_eff3>1
-su cost_eff3,de
-
-sfpanel ldvy1  ldc3 ldc4 ldc5 ldc9 time, model(tre) distribution(exp) nsim(10) simtype(genhalton) base(7) rescale vce(robust)
-outreg2 using "frontier_test.xls", sideway noparen dec(3) nose append
-
-
-estimates store tre_p 
-predict u_tre_p, u
-tab Country if u_tre_p==.
-
-gen prod_eff3=exp(-u_tre_p) if u_tre_p!=.
-replace prod_eff3=1 if prod_eff3!=. & prod_eff3>1
-save "testrun1.dta",replace
-** There are 1616 Ucode which has at least 7 years of output/totalcost data
-
+*/
 ******************************************************************************************************************************************************************
 ** Creating lags and 3 years moving averages to replace missing values at bottom. We repeat this for 3 times
 ******************************************************************************************************************************************************************

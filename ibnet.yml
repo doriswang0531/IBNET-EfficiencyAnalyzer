@@ -1,0 +1,31 @@
+name: 'ibnet'
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - ipykernel=6.26.0
+  - jinja2=3.1.2
+  - matplotlib=3.8.0
+  - nb_conda_kernels=2.3.1 
+  - pandas=2.1.1
+  - numpy=1.26.0 
+  - pip=23.2.1
+  - python==3.10
+  - scikit-learn=1.3.2
+  - vl-convert-python=1.1.0
+  - jupyter-book=0.15.1
+  - pytest=7.4.3
+  - scipy=1.11.3
+  - seaborn=0.13.0
+  - seaborn-base=0.13.0
+  
+  - pip:
+      - docopt==0.6.2
+      - js2py==0.74
+      - missingpy==0.2.0
+      - pipwin==0.5.2
+      - pyjsparser==2.7.1
+      - pyprind==2.11.3
+      - pysmartdl==1.3.4
+      - scikit-learn==1.1.1
+      - tzlocal==5.2

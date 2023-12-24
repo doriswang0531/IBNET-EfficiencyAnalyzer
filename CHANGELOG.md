@@ -8,7 +8,7 @@ paper 2: cost and productivty estimation and monetary hidden cost
 
 ---
 
-## [Paper Draft Version 2022.09.24] - 2023-12-21 ~ 2023-12-25
+## [Paper Draft Version 2022.09.24] - Update 2023-12
 
 ### Narratives 📝
 
@@ -16,13 +16,11 @@ paper 2: cost and productivty estimation and monetary hidden cost
    Original IBNET data: 5191 utilities, 1994 – 2020 (17 years), 141,426 obs.
    IBNET3.dta: after selecting eligible utilities with at least 7 data points available for water production or operating cost – 1,619 utilities, 22,666 obs. Don't run the PART 1 session of the do file 01_data_prepare, or you will a different IBNET3.dta from Basab's one. Just use the IBNET3.dta as the inital dataset to start the project. Don't start from IBNET1.dta.
 2. Starting from IBNET3.dta, 1566 unique utilities, dropped 3 utilities with s6 missing across all years.
-3. 
 
-### Added 🆕
+### Enhancement🚀
 
-1. Added envrionment,yml (link here) file to solve python scripts' envrionmental issues:
-
-   ```
+1. **Environment Configuration**: An `environment.yml` file was added to address environmental issues encountered with Python scripts. This addition addresses import errors from dependencies, such as `missingpy`, specifically issues related to importing `_check_weights` from `sklearn.neighbors._base`
+2. ```
     ----> 1 import missingpy
 
     File c:\Users\doris\miniconda3\envs\573\Lib\site-packages\missingpy\__init__.py:1
@@ -40,17 +38,17 @@ paper 2: cost and productivty estimation and monetary hidden cost
     ImportError: cannot import name '_check_weights' from 'sklearn.neighbors._base' (c:\Users\doris\miniconda3\envs\573\Lib\site-packages\sklearn\neighbors\_base.py)
    ```
 
-   To fix this issue, refer to this [post](https://stackoverflow.com/questions/75633185/importerror-cannot-import-name-check-weights-from-sklearn-neighbors-base) on stackoverflow.
-2. Created Python scripts (link here) for visualizing the pattern of missing values and imputation with missing forest, kNN and MICE algorithms for reproducible purpose
-3. 
+   Users experiencing similar issues can refer to a comprehensive solution on [StackOverflow](https://stackoverflow.com/questions/75633185/importerror-cannot-import-name-check-weights-from-sklearn-neighbors-base).
+3. **Python Scripts for Data Analysis**: New Python scripts were introduced for visualizing missing data patterns and performing imputation. The scripts utilize Missing Forest, kNN, and MICE algorithms to ensure a reproducible process for handling missing values.e
 
 ### Fixed 🛠️
 
-1. Flagged out and fixed the inconsistent scales across years for some utilities
-2. Updated the method for generating deciles: Instead of directly employing the 's6' variable, which represents the served population, we have refined our approach. Now, we first calculate the median value of the served population for each utility. Subsequently, we use these median values to generate deciles. This change aims to provide a more accurate and representative classification of utilities based on the population they serve
-3. Dropped three utilities with missing s6 across all years
-4. Instread of imputing missing values by subset/block created by year and s6_decile, which does not have enough number of data, used only s6_decile as subset to impute missing values based on missing forest, kNN and MICE algorithms.
-5. 
+1. **Inconsistent Scales Across Years**: Identified and corrected inconsistencies in scales across different years for certain utilities. This fix ensures data consistency and accuracy in longitudinal analyses.
+2. **Decile Generation Method**: Updated the methodology for generating utility deciles. Previously direct usage of the 's6' variable (served population) might have led to inaccuracies. Now, the median served population for each utility is calculated first, and these medians are used to generate deciles. This enhancement improves the precision of utility classification based on population served.
+3. **Utilities with Consistently Missing Data**: Removed three utilities with consistently missing 's6' values across all years to maintain data integrity and analysis validity.
+4. **Improved Missing Value Imputation Strategy**: Optimized the imputation strategy for missing values. Instead of creating subsets/blocks by both year and 's6_decile', which often led to insufficient data for imputation, the process now solely utilizes 's6_decile' for creating subsets. This change is applied across Missing Forest, kNN, and MICE algorithms, enhancing the robustness and accuracy of imputations.
+
+### Added 🆕
 
 ### Cleaned 🧹
 

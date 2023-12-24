@@ -13,6 +13,7 @@ capture log close
 global project  "C:\Users\doris\OneDrive - UBC\Documents\Learning\WB\IBNET-EfficiencyAnalyzer"
 global scripts 	"$project\scripts"
 global figures 	"$project\figures"
+global tables	"$project\tables"
 global do		"$project\do"
 global data 	"$project\data"
 
@@ -181,11 +182,9 @@ foreach x in $monetary	{
 	*replace `x'=m`x' if `x'==.|`x'==0
 	gen d`x'=(`x'*PPP_def)/LCPPP
 	lab var d`x' "Cost `x' in PPP at 2017 Constant Int. dollars"
-		gen ld`x'=log10(d`x')
-		lab var ld`x' "Log10 of Cost `x' in PPP at 2017 Constant Int. dollars"
+		*gen ld`x'=log10(d`x')
+		*lab var ld`x' "Log10 of Cost `x' in PPP at 2017 Constant Int. dollars"
 }
-
-
 
 
 *	fill out missing for utility ownership and type of service provider
@@ -200,15 +199,22 @@ bysort Ucode (Year): carryforward `x' if `x'==., replace
 }
 
 drop negyear s4a s5a 
-sort Country Year
-sort ID Year
 
 *	generate decile using populatoion served
-bysort Ucode: egen median_pop = median(s6)
+preserve
+collapse (median) median_pop = s6, by(Ucode)
+*bysort Ucode: egen median_pop = median(s6)
+xtile s6_decile = median_pop, nq(10)
+sort Ucode
+tempfile s6_decile
+save `s6_decile'
+restore
+merge m:1 Ucode using `s6_decile'
+cap drop _merge median_pop
 
-xtile s6_decile = s6, nq(10)
 gen ID1 = Year * 100 + s6_decile
 drop if ID1 == .
+sort Country Ucode Year
 
 preserve
 keep ID ID1 Year dc3 dc4 dc5 dc7 dc8 dc9 y1 y2 y3 s1 s3 s4 s5 s6 s6_decile s8 t1 t2 t3 t4 t5
@@ -218,6 +224,7 @@ restore
 
 *	PRELIMINARY EDA
 * Loop over the variables and create kdensity plots
+/*
 foreach var in $monetary {
     local varlabel : variable label `var'
 
@@ -239,6 +246,32 @@ foreach var in $monetary {
            title("Kernel Density of `var' (`varlabel') by s6_decile", size(small))
     graph export "$figures\\`var'_kdensity.png", replace
 }
+*/
+
+*	Cost and production efficiency estimation using original data
+tsset Ucode Year
+
+*removing other cost (c6) from the model.
+sfpanel ldc7 ldc3 ldc4 ldc5 ldc9 time, model(tre) distribution(exp) cost nsim(20) simtype(genhalton) base(7) rescale vce(robust)
+outreg2 using "$tables\frontier_test.xls", sideway noparen dec(3) nose replace
+
+estimates store tre_c 
+predict u_tre_c, u
+tab Country if u_tre_c==.
+
+gen cost_eff3=exp(-u_tre_c)  if   u_tre_c!=.
+replace cost_eff3=1 if cost_eff3!=. & cost_eff3>1
+su cost_eff3,de
+
+sfpanel ldvy1  ldc3 ldc4 ldc5 ldc9 time, model(tre) distribution(exp) nsim(10) simtype(genhalton) base(7) rescale vce(robust)
+outreg2 using "$tables\frontier_test.xls", sideway noparen dec(3) nose append
+
+estimates store tre_p 
+predict u_tre_p, u
+tab Country if u_tre_p==.
+
+gen prod_eff3=exp(-u_tre_p) if u_tre_p!=.
+replace prod_eff3=1 if prod_eff3!=. & prod_eff3>1
 
 
 **# PART II: MISSING VALUE IMPUTATION USING PYTHON
