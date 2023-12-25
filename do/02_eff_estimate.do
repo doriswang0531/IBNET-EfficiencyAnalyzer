@@ -1,10 +1,10 @@
 
-/*
 
-*/
-******************************************************************************************************************************************************************
-** Creating lags and 3 years moving averages to replace missing values at bottom. We repeat this for 3 times
-******************************************************************************************************************************************************************
+**# PART 3: MISSING VALUES IMPUTATION & FRONTIER ESTIMATION
+
+*-------------------------------------------------------------------------------
+*	IMPUTATION STRATEGY 1: MOVING AVERAGE
+*	Creating lags and 3 years moving averages to replace missing values at bottom. We repeat this for 3 times
 
 use "IBNET3.dta",clear
 foreach x in y1 y2 y3 x1 x2 x3 x4 x5 c1 c2 c3 c4 c5 c6 c7 c8 c9 e1 t1 s1 s2 s3 s6 s7 s8 PPP_def LCPPP PPP2US15{
@@ -70,12 +70,9 @@ replace `x'=ma3_`x' if `x'==.|`x'==0
 drop l1* l2* l3* ma3* 
 
 
-save "IBNET4.dta",replace  
 
-*********************************************************************************************************
-** Creating Leads and 3 years moving averages to replace missing values at top . We repeat this for 3 times
-*********************************************************************************************************
-use "IBNET4.dta",clear
+*	Creating Leads and 3 years moving averages to replace missing values at top . We repeat this for 3 times
+
 foreach x in y1 y2 y3 x1 x2 x3 x4 x5 c1 c2 c3 c4 c5 c6 c7 c8 c9 e1 t1 s1 s2 s3 s6 s7 s8 PPP_def LCPPP PPP2US15{
 gen f1`x'=f1.`x'	
 gen f2`x'=f2.`x'
@@ -139,10 +136,7 @@ replace `x'=maf3_`x' if `x'==.|`x'==0
 drop f1* f2* f3* maf3*
 
 
-save "IBNET5.dta",replace  
-************************************************2nd  check point for sfpanel sensitivity analysis************************************************************
 
-use "IBNET5.dta",clear
 gen time=Year-2003
 gen vy1=t1*y1
 tsset Ucode Year
@@ -158,7 +152,7 @@ foreach x in vy1 y2 y3 c7  c2 c3 c4 c5 c6 c8 c9{
 
 tsset Ucode Year
 
-*removing other cost (c6) from the model.
+*	Cost and production efficiency estimation using moving average strategy 1
 sfpanel ldc7 ldc3 ldc4 ldc5 ldc9 time, model(tre) distribution(exp) cost nsim(20) simtype(genhalton) base(7) rescale vce(robust)
 outreg2 using "frontier_test.xls", sideway noparen dec(3) nose append
 
@@ -180,22 +174,28 @@ tab Country if u_tre_p==.
 
 gen prod_eff2=exp(-u_tre_p) if u_tre_p!=.
 replace prod_eff2=1 if prod_eff2!=. & prod_eff2>1
-save "testrun2.dta",replace
-****************************************************************************************************************************************************************
-use "IBNET5.dta",clear
-xtile s6_decile = s6, nq(10)
-xtile s3_decile = s3, nq(10)
-xtile s1_decile = s1, nq(10)
+
+*-------------------------------------------------------------------------------
+*	IMPUTATION STRATEGY 2: USING AVEREAGE OF DECILE, SERVICE PROVIDER AND YEAR
 sort Country Ucode Year
+*	generate decile using populatoion served
+preserve
+collapse (median) median_pop = s6, by(Ucode)
+*bysort Ucode: egen median_pop = median(s6)
+xtile s6_decile = median_pop, nq(10)
+sort Ucode
+tempfile s6_decile
+save `s6_decile'
+restore
+merge m:1 Ucode using `s6_decile'
+cap drop _merge median_pop
 
 foreach x in y1 y2 y3 x1 x2 x3 x4 x5 c1 c2 c3 c4 c5 c6 c7 c8 c9 e1 t1 s1 s2 s3 s7 s8 PPP_def LCPPP PPP2US15{
-	egen mean_`x'=mean(`x'),by(Year s4 s6_decile)
+	egen mean_`x'=mean(`x'), by(Year s4 s6_decile)
 	replace `x'=mean_`x' if `x'==.|`x'==0
 }
-save "IBNET6.dta",replace  
-************************************************ 3rd check point for sfpanel *************************************************************************************
 
-use "IBNET6.dta",clear
+
 gen time=Year-2003
 gen vy1=t1*y1
 tsset Ucode Year
@@ -209,8 +209,7 @@ foreach x in vy1 y2 y3 c7  c2 c3 c4 c5 c6 c8 c9{
 }
 
 
-su
-** Cost minimization
+*	Cost and production efficiency estimation using moving average strategy 2
 tsset Ucode Year
 
 *removing other cost (c6) from the model.
@@ -235,9 +234,7 @@ tab Country if u_tre_p==.
 
 gen prod_eff1=exp(-u_tre_p) if u_tre_p!=.
 replace prod_eff1=1 if prod_eff1!=. & prod_eff1>1
-save "testrun3.dta",replace
 
-**********************************************************************************************************************************************************************
 
 
 use "IBNET6.dta",clear

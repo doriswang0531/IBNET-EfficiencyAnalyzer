@@ -10,7 +10,7 @@ clear all
 set more off
 capture log close
 
-global project  "C:\Users\doris\OneDrive - UBC\Documents\Learning\WB\IBNET-EfficiencyAnalyzer"
+global project  "C:\Users\wb450887\WBG\George Joseph - 10_Pulbic Expenditure Review\102_ Syntheis Report\Working Papers\Working Paper 4\IBNET-EfficiencyAnalyzer"
 global scripts 	"$project\scripts"
 global figures 	"$project\figures"
 global tables	"$project\tables"
@@ -148,6 +148,12 @@ save "IBNET3.dta",replace
 
 *	DATA CLEANING
 use "IBNET3.dta",clear
+
+*	merge with region and income group
+sort Country
+merge m:1 Country using "$data/wbcountry.dta"
+cap drop _merge
+
 gen time=Year-2003
 gen vy1=t1*y1	//tariff * water production
 
@@ -182,8 +188,8 @@ foreach x in $monetary	{
 	*replace `x'=m`x' if `x'==.|`x'==0
 	gen d`x'=(`x'*PPP_def)/LCPPP
 	lab var d`x' "Cost `x' in PPP at 2017 Constant Int. dollars"
-		*gen ld`x'=log10(d`x')
-		*lab var ld`x' "Log10 of Cost `x' in PPP at 2017 Constant Int. dollars"
+		gen ld`x'=log10(d`x')
+		lab var ld`x' "Log10 of Cost `x' in PPP at 2017 Constant Int. dollars"
 }
 
 
@@ -222,9 +228,30 @@ keep ID ID1 Year dc3 dc4 dc5 dc7 dc8 dc9 y1 y2 y3 s1 s3 s4 s5 s6 s6_decile s8 t1
 save "IBNET3a4py.dta",replace
 restore
 
+*collapse (count) Ucode, by(wbregion wbincome countryname Utility)
+
+*collapse (count) Ucode, by(wbregion wbincome countryname)
+
+local i = 1
+foreach var in $numeric {
+    local pct_missing = sum(missing(`var')) / _N * 100
+    matrix missings[1,`i'] = `pct_missing'
+    local i = `i' + 1
+}
+
+* Convert the matrix to a dataset
+svmata missings, names(vars)
+
+* Sort by percent missing in descending order for the bar chart
+gsort -missings1
+
+* Create the bar chart with variable labels
+graph bar missings1, over(_all) blabel(bar, format(%9.0g)) ylabel(, angle(horizontal)) ytitle("Percent Missing") name(missing_data_chart, replace)
+
+
 *	PRELIMINARY EDA
 * Loop over the variables and create kdensity plots
-/*
+
 foreach var in $monetary {
     local varlabel : variable label `var'
 
@@ -246,12 +273,12 @@ foreach var in $monetary {
            title("Kernel Density of `var' (`varlabel') by s6_decile", size(small))
     graph export "$figures\\`var'_kdensity.png", replace
 }
-*/
+
 
 *	Cost and production efficiency estimation using original data
 tsset Ucode Year
 
-*removing other cost (c6) from the model.
+*	removing other cost (c6) from the model.
 sfpanel ldc7 ldc3 ldc4 ldc5 ldc9 time, model(tre) distribution(exp) cost nsim(20) simtype(genhalton) base(7) rescale vce(robust)
 outreg2 using "$tables\frontier_test.xls", sideway noparen dec(3) nose replace
 
