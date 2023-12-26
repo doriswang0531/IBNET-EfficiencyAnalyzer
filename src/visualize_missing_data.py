@@ -36,9 +36,6 @@ def missing_data_visualize(input_file, output_file):
     # Add a vertical line at 0.4 threshold
     plt.axvline(0.4, color='r', ls='--')
     
-    # Improve layout
-    plt.tight_layout()
-    
     # Save the plot
     plt.savefig(output_file)
 
