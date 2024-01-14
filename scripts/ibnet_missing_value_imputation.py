@@ -1,6 +1,6 @@
 # scripts/ibnet_missing_data_imputation.py
 # author: Qiao Wang
-# date: 2023-12-23
+# date: 2024-01-13
 
 import os
 import sys
@@ -24,12 +24,12 @@ def main():
     mice_output_dta = os.path.join(repo_root, 'data', 'IBNET3-mice-imputed.dta')
 
     # Define the decile variable
-    decile_var = 's6_decile'
+    decile_var = 'ID1'
 
     # Visualize Missing Values
     print("Missing values of orginal data...")
     missing_data_visualize(input_dta, figures_output_file)
-    print("Missing value pattern figigure saved.")
+    print("Missing value pattern figure saved.")
 
     # Run MissForest Imputation
     print("Starting MissForest imputation...")
